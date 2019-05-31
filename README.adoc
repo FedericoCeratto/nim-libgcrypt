@@ -1,0 +1,46 @@
+
+== Libgcrypt wrapper for Nim
+
+image:https://circleci.com/gh/FedericoCeratto/nim-httpauth.svg?style=svg["CircleCI", link="https://circleci.com/gh/FedericoCeratto/nim-httpauth"]
+image:https://travis-ci.org/FedericoCeratto/nim-libsodium.svg?branch=master["Build Status", link="https://travis-ci.org/FedericoCeratto/nim-libsodium"]
+image:https://img.shields.io/badge/status-alpha-orange.svg[badge]
+image:https://img.shields.io/github/tag/FedericoCeratto/nim-libgcrypt.svg[tags]
+image:https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg[License]
+
+WARNING: This library is under development and has not been reviewed by 3rd parties
+
+### Features
+
+* Wrap libgcrypt 1.8.4
+* Tested on Linux
+* Basic unit tests
+* No homemade crypto
+
+### Usage
+
+Refer to the link:https://www.gnupg.org/software/libgcrypt/index.html[official libgcrypt documentation]
+
+Install the development library:
+
+[source,bash]
+----
+nimble install libgcrypt
+----
+
+Install the runtime dependency:
+
+[source,bash]
+----
+sudo apt-get install libgcrypt20
+----
+
+Example:
+
+[source,nim]
+----
+
+----
+
+### Contributing
+
+Testing and PRs are welcome.
