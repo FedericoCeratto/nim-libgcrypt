@@ -34,12 +34,7 @@ Install the runtime dependency:
 sudo apt-get install libgcrypt20
 ----
 
-Example:
-
-[source,nim]
-----
-
-----
+See tests/test_basic.nim for usage examples.
 
 ### Contributing
 
