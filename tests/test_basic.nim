@@ -28,11 +28,6 @@ suite "basic":
     check gcry_is_secure(r) == 1
     gcry_free(r)
 
-  #test "hash":
-  #  var buffer = "foo".cstring
-  #  var digest = "                                                                                                                                                                                                                         ".cstring
-  #  gcry_md_hash_buffer(GCRY_MD_MD5.cint, digest, addr buffer, 2.csize)
-
   test "pubkey":
     var keypair: gcry_sexp_t = nil
     let param = gcry_new_sexp("(genkey\n (rsa\n  (nbits 4:1024)\n ))")
@@ -45,7 +40,7 @@ suite "basic":
     check_rc gcry_pk_testkey(keypair)
 
     let plain = "foo"
-    let plain_s = gcry_new_data_sexp("foo")
+    let plain_s = gcry_new_data_sexp(plain)
     check plain_s != nil
     check gcry_sexp_sprint(plain_s, GCRYSEXP_FMT_CANON) == "(4:data(5:value3:foo))"
 
@@ -69,3 +64,13 @@ suite "basic":
     gcry_sexp_release decrypted
     gcry_sexp_release keypair
     gcry_sexp_release param
+
+  test "hash":
+    const input = "fooo"
+    const expected = "A9823A788388027D9A7A8C19F49E786B"
+    let digest_length = gcry_md_get_algo_dlen(GCRY_MD_MD5)
+    var digest = gcry_malloc(digest_length.csize)
+    gcry_md_hash_buffer(GCRY_MD_MD5, digest, input.cstring, input.len.csize)
+    let d = fromCString(digest, digest_length.int).toHex()
+    check d == expected
+

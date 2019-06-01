@@ -373,7 +373,7 @@ proc gcry_sexp_canon_len*(buffer: ptr cuchar; length: csize; erroff: ptr csize;
 proc gcry_sexp_sprint*(sexp: gcry_sexp_t; mode: gcry_sexp_format; buffer: pointer; maxlength: csize): csize {.
     importc: "gcry_sexp_sprint", import_gcrypt.}
 
-proc fromCString(p: pointer, len: int): string =
+proc fromCString*(p: pointer, len: int): string =
   result = newString(len)
   copyMem(result.cstring, p, len)
 
@@ -1447,7 +1447,7 @@ proc gcry_md_extract*(hd: gcry_md_hd_t; algo: cint; buffer: pointer; length: csi
 ##    DIGEST which must be large enough to hold the digest of the given
 ##    algorithm.
 
-proc gcry_md_hash_buffer*(algo: cint; digest: pointer; buffer: pointer; length: csize) {.
+proc gcry_md_hash_buffer*(algo: gcry_md_algos; digest: pointer; buffer: pointer; length: csize) {.
     importc: "gcry_md_hash_buffer", import_gcrypt.}
 ##  Convenience function to hash multiple buffers.
 
@@ -1462,7 +1462,7 @@ proc gcry_md_get_algo*(hd: gcry_md_hd_t): cint {.importc: "gcry_md_get_algo",
 ##  Retrieve the length in bytes of the digest yielded by algorithm
 ##    ALGO.
 
-proc gcry_md_get_algo_dlen*(algo: cint): cuint {.importc: "gcry_md_get_algo_dlen",
+proc gcry_md_get_algo_dlen*(algo: gcry_md_algos): cuint {.importc: "gcry_md_get_algo_dlen",
     import_gcrypt.}
 ##  Return true if the the algorithm ALGO is enabled in the digest
 ##    object A.
