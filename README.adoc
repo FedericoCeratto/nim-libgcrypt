@@ -1,6 +1,7 @@
 
 == Libgcrypt wrapper for Nim
 
+image:https://travis-ci.org/FedericoCeratto/nim-libgcrypt.svg?branch=master["Build Status", link="https://travis-ci.org/FedericoCeratto/nim-libgcrypt"]
 image:https://img.shields.io/badge/status-alpha-orange.svg[badge]
 image:https://img.shields.io/github/tag/FedericoCeratto/nim-libgcrypt.svg[tags]
 image:https://img.shields.io/badge/License-LGPL%20v2.1-blue.svg[License]
@@ -22,6 +23,7 @@ Install the development library:
 
 [source,bash]
 ----
+sudo apt-get install libgcrypt20-dev
 nimble install libgcrypt
 ----
 
