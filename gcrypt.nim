@@ -1449,8 +1449,9 @@ proc gcry_md_extract*(hd: gcry_md_hd_t; algo: cint; buffer: pointer; length: csi
 
 proc gcry_md_hash_buffer*(algo: gcry_md_algos; digest: pointer; buffer: pointer; length: csize) {.
     importc: "gcry_md_hash_buffer", import_gcrypt.}
-##  Convenience function to hash multiple buffers.
 
+
+##  Convenience function to hash multiple buffers.
 proc gcry_md_hash_buffers*(algo: cint; flags: cuint; digest: pointer;
                           iov: ptr gcry_buffer_t; iovcnt: cint): gpg_error_t {.
     importc: "gcry_md_hash_buffers", import_gcrypt.}
@@ -1530,6 +1531,14 @@ template gcry_md_test_algo*(a: untyped): untyped =
 
 template gcry_md_get_asnoid*(a, b, n: untyped): untyped =
   gcry_md_algo_info((a), GCRYCTL_GET_ASNOID, (b), (n))
+
+proc gcry_easyhash*(input: string, algo: gcry_md_algos): string =
+  ## Convenience function to hash a string.
+  let digest_length = gcry_md_get_algo_dlen(algo)
+  var digest = gcry_malloc(digest_length.csize)
+  gcry_md_hash_buffer(algo, digest, input.cstring, input.len.csize)
+  return fromCString(digest, digest_length.int)
+
 
 ## *********************************************
 ##                                             *

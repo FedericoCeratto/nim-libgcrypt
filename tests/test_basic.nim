@@ -74,3 +74,9 @@ suite "basic":
     let d = fromCString(digest, digest_length.int).toHex()
     check d == expected
 
+  test "easyhash":
+    const input = "fooo"
+    const expected = "A9823A788388027D9A7A8C19F49E786B"
+    let d = gcry_easyhash(input, GCRY_MD_MD5)
+    check d.toHex() == expected
+
