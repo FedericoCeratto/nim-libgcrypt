@@ -240,9 +240,9 @@ type
 
 type
   gcry_buffer_t* {.bycopy.} = object
-    size*: csize               ##  The allocated size of the buffer or 0.
-    off*: csize                ##  Offset into the buffer.
-    len*: csize                ##  The used length of the buffer.
+    size*: uint                ##  The allocated size of the buffer or 0.
+    off*: uint                 ##  Offset into the buffer.
+    len*: uint                 ##  The used length of the buffer.
     data*: pointer             ##  The buffer.
 
 
@@ -319,7 +319,7 @@ type
 ##    return it in RETSEXP.  With AUTODETECT set to 0 the data in BUFFER
 ##    is expected to be in canonized format.
 
-proc gcry_sexp_new*(retsexp: ptr gcry_sexp_t; buffer: pointer; length: csize;
+proc gcry_sexp_new*(retsexp: ptr gcry_sexp_t; buffer: pointer; length: uint;
                    autodetect: cint): gcry_error_t {.importc: "gcry_sexp_new",
     import_gcrypt.}
 ##  Same as gcry_sexp_new but allows to pass a FREEFNC which has the
@@ -331,19 +331,19 @@ proc gcry_new_sexp*(s: string): gcry_sexp_t =
   check_rc gcry_sexp_new(addr param, s.cstring, 0, 1)
   return param
 
-proc gcry_sexp_create*(retsexp: ptr gcry_sexp_t; buffer: pointer; length: csize;
+proc gcry_sexp_create*(retsexp: ptr gcry_sexp_t; buffer: pointer; length: uint;
                       autodetect: cint; freefnc: proc (a1: pointer)): gcry_error_t {.
     importc: "gcry_sexp_create", import_gcrypt.}
 ##  Scan BUFFER and return a new S-expression object in RETSEXP.  This
 ##    function expects a printf like string in BUFFER.
 
-proc gcry_sexp_sscan*(retsexp: ptr gcry_sexp_t; erroff: ptr csize; buffer: cstring;
-                     length: csize): gcry_error_t {.importc: "gcry_sexp_sscan",
+proc gcry_sexp_sscan*(retsexp: ptr gcry_sexp_t; erroff: ptr uint; buffer: cstring;
+                     length: uint): gcry_error_t {.importc: "gcry_sexp_sscan",
     import_gcrypt.}
 ##  Same as gcry_sexp_sscan but expects a string in FORMAT and can thus
 ##    only be used for certain encodings.
 
-proc gcry_sexp_build*(retsexp: ptr gcry_sexp_t; erroff: ptr csize; format: cstring): gcry_error_t {.
+proc gcry_sexp_build*(retsexp: ptr gcry_sexp_t; erroff: ptr uint; format: cstring): gcry_error_t {.
     varargs, importc: "gcry_sexp_build", import_gcrypt.}
 
 proc gcry_new_data_sexp*(data: string): gcry_sexp_t =
@@ -354,7 +354,7 @@ proc gcry_new_data_sexp*(data: string): gcry_sexp_t =
 
 ##  Like gcry_sexp_build, but uses an array instead of variable
 ##    function arguments.
-proc gcry_sexp_build_array*(retsexp: ptr gcry_sexp_t; erroff: ptr csize;
+proc gcry_sexp_build_array*(retsexp: ptr gcry_sexp_t; erroff: ptr uint;
                            format: cstring; arg_list: ptr pointer): gcry_error_t {.
     importc: "gcry_sexp_build_array", import_gcrypt.}
 ##  Release the S-expression object SEXP
@@ -364,27 +364,27 @@ proc gcry_sexp_release*(sexp: gcry_sexp_t) {.importc: "gcry_sexp_release",
 ##  Calculate the length of an canonized S-expression in BUFFER and
 ##    check for a valid encoding.
 
-proc gcry_sexp_canon_len*(buffer: ptr cuchar; length: csize; erroff: ptr csize;
-                         errcode: ptr gcry_error_t): csize {.
+proc gcry_sexp_canon_len*(buffer: ptr cuchar; length: uint; erroff: ptr uint;
+                         errcode: ptr gcry_error_t): uint {.
     importc: "gcry_sexp_canon_len", import_gcrypt.}
 
 ##  Copies the S-expression object SEXP into BUFFER using the format
 ##    specified in MODE.
-proc gcry_sexp_sprint*(sexp: gcry_sexp_t; mode: gcry_sexp_format; buffer: pointer; maxlength: csize): csize {.
+proc gcry_sexp_sprint*(sexp: gcry_sexp_t; mode: gcry_sexp_format; buffer: pointer; maxlength: uint): uint {.
     importc: "gcry_sexp_sprint", import_gcrypt.}
 
 proc fromCString*(p: pointer, len: int): string =
   result = newString(len)
   copyMem(result.cstring, p, len)
 
-proc gcry_malloc*(n: csize): pointer {.importc: "gcry_malloc", import_gcrypt.}
+proc gcry_malloc*(n: uint): pointer {.importc: "gcry_malloc", import_gcrypt.}
 
 proc gcry_sexp_sprint*(sexp: gcry_sexp_t; mode: gcry_sexp_format): string =
   ## Convert S-expression to string
   let size = gcry_sexp_sprint(sexp, mode, nil, 0)
   let buf = gcry_malloc(size)
   discard gcry_sexp_sprint(sexp, mode, buf, size)
-  return fromCString(buf, size - 1)
+  return fromCString(buf, size.int - 1)
 
 proc `$`*(sexp: gcry_sexp_t): string =
   ## Convert S-expression in advanced mode
@@ -410,7 +410,7 @@ proc gcry_sexp_prepend*(a: gcry_sexp_t; n: gcry_sexp_t): gcry_sexp_t {.
 ##    newly allocated S-expression consisting of the found sublist or
 ##    `NULL' when not found.
 
-proc gcry_sexp_find_token*(list: gcry_sexp_t; tok: cstring; toklen: csize): gcry_sexp_t {.
+proc gcry_sexp_find_token*(list: gcry_sexp_t; tok: cstring; toklen: uint): gcry_sexp_t {.
     importc: "gcry_sexp_find_token", import_gcrypt.}
 ##  Return the length of the LIST.  For a valid S-expression this
 ##    should be at least 1.
@@ -446,14 +446,14 @@ proc gcry_sexp_cadr*(list: gcry_sexp_t): gcry_sexp_t {.importc: "gcry_sexp_cadr"
 ## Note:* The returned pointer is valid as long as LIST is not
 ##    modified or released.
 
-proc gcry_sexp_nth_data*(list: gcry_sexp_t; number: cint; datalen: ptr csize): cstring {.
+proc gcry_sexp_nth_data*(list: gcry_sexp_t; number: cint; datalen: ptr uint): cstring {.
     importc: "gcry_sexp_nth_data", import_gcrypt.}
 ##  This function is used to get data from a LIST.  A malloced buffer to the
 ##    data with index NUMBER is returned and the length of this
 ##    data will be stored to RLENGTH.  If there is no data at the given
 ##    index or the index represents another list, `NULL' is returned.
 
-proc gcry_sexp_nth_buffer*(list: gcry_sexp_t; number: cint; rlength: ptr csize): pointer {.
+proc gcry_sexp_nth_buffer*(list: gcry_sexp_t; number: cint; rlength: ptr uint): pointer {.
     importc: "gcry_sexp_nth_buffer", import_gcrypt.}
 ##  This function is used to get and convert data from a LIST.  The
 ##    data is assumed to be a Nul terminated string.  The caller must
@@ -622,7 +622,7 @@ proc gcry_mpi_cmp_ui*(u: gcry_mpi_t; v: culong): cint {.importc: "gcry_mpi_cmp_u
 ##    bytes actually scanned after a successful operation.
 
 proc gcry_mpi_scan*(ret_mpi: ptr gcry_mpi_t; format: gcry_mpi_format; buffer: pointer;
-                   buflen: csize; nscanned: ptr csize): gcry_error_t {.
+                   buflen: uint; nscanned: ptr uint): gcry_error_t {.
     importc: "gcry_mpi_scan", import_gcrypt.}
 ##  Convert the big integer A into the external representation
 ##    described by FORMAT and store it in the provided BUFFER which has
@@ -630,8 +630,8 @@ proc gcry_mpi_scan*(ret_mpi: ptr gcry_mpi_t; format: gcry_mpi_format; buffer: po
 ##    receives the actual length of the external representation unless it
 ##    has been passed as NULL.
 
-proc gcry_mpi_print*(format: gcry_mpi_format; buffer: ptr cuchar; buflen: csize;
-                    nwritten: ptr csize; a: gcry_mpi_t): gcry_error_t {.
+proc gcry_mpi_print*(format: gcry_mpi_format; buffer: ptr cuchar; buflen: uint;
+                    nwritten: ptr uint; a: gcry_mpi_t): gcry_error_t {.
     importc: "gcry_mpi_print", import_gcrypt.}
 ##  Convert the big integer A into the external representation described
 ##    by FORMAT and store it in a newly allocated buffer which address
@@ -639,7 +639,7 @@ proc gcry_mpi_print*(format: gcry_mpi_format; buffer: ptr cuchar; buflen: csize;
 ##    external representation.
 
 proc gcry_mpi_aprint*(format: gcry_mpi_format; buffer: ptr ptr cuchar;
-                     nwritten: ptr csize; a: gcry_mpi_t): gcry_error_t {.
+                     nwritten: ptr uint; a: gcry_mpi_t): gcry_error_t {.
     importc: "gcry_mpi_aprint", import_gcrypt.}
 ##  Dump the value of A in a format suitable for debugging to
 ##    Libgcrypt's logging stream.  Note that one leading space but no
@@ -1124,16 +1124,16 @@ proc gcry_cipher_close*(h: gcry_cipher_hd_t) {.importc: "gcry_cipher_close",
     import_gcrypt.}
 ##  Perform various operations on the cipher object H.
 
-proc gcry_cipher_ctl*(h: gcry_cipher_hd_t; cmd: cint; buffer: pointer; buflen: csize): gcry_error_t {.
+proc gcry_cipher_ctl*(h: gcry_cipher_hd_t; cmd: cint; buffer: pointer; buflen: uint): gcry_error_t {.
     importc: "gcry_cipher_ctl", import_gcrypt.}
 ##  Retrieve various information about the cipher object H.
 
 proc gcry_cipher_info*(h: gcry_cipher_hd_t; what: cint; buffer: pointer;
-                      nbytes: ptr csize): gcry_error_t {.
+                      nbytes: ptr uint): gcry_error_t {.
     importc: "gcry_cipher_info", import_gcrypt.}
 ##  Retrieve various information about the cipher algorithm ALGO.
 
-proc gcry_cipher_algo_info*(algo: cint; what: cint; buffer: pointer; nbytes: ptr csize): gcry_error_t {.
+proc gcry_cipher_algo_info*(algo: cint; what: cint; buffer: pointer; nbytes: ptr uint): gcry_error_t {.
     importc: "gcry_cipher_algo_info", import_gcrypt.}
 ##  Map the cipher algorithm whose ID is contained in ALGORITHM to a
 ##    string representation of the algorithm name.  For unknown algorithm
@@ -1157,33 +1157,33 @@ proc gcry_cipher_mode_from_oid*(string: cstring): cint {.
 ##    most algorithms it is possible to pass NULL for in and 0 for INLEN
 ##    and do a in-place decryption of the data provided in OUT.
 
-proc gcry_cipher_encrypt*(h: gcry_cipher_hd_t; `out`: pointer; outsize: csize;
-                         `in`: pointer; inlen: csize): gcry_error_t {.
+proc gcry_cipher_encrypt*(h: gcry_cipher_hd_t; `out`: pointer; outsize: uint;
+                         `in`: pointer; inlen: uint): gcry_error_t {.
     importc: "gcry_cipher_encrypt", import_gcrypt.}
 ##  The counterpart to gcry_cipher_encrypt.
 
-proc gcry_cipher_decrypt*(h: gcry_cipher_hd_t; `out`: pointer; outsize: csize;
-                         `in`: pointer; inlen: csize): gcry_error_t {.
+proc gcry_cipher_decrypt*(h: gcry_cipher_hd_t; `out`: pointer; outsize: uint;
+                         `in`: pointer; inlen: uint): gcry_error_t {.
     importc: "gcry_cipher_decrypt", import_gcrypt.}
 ##  Set KEY of length KEYLEN bytes for the cipher handle HD.
 
-proc gcry_cipher_setkey*(hd: gcry_cipher_hd_t; key: pointer; keylen: csize): gcry_error_t {.
+proc gcry_cipher_setkey*(hd: gcry_cipher_hd_t; key: pointer; keylen: uint): gcry_error_t {.
     importc: "gcry_cipher_setkey", import_gcrypt.}
 ##  Set initialization vector IV of length IVLEN for the cipher handle HD.
 
-proc gcry_cipher_setiv*(hd: gcry_cipher_hd_t; iv: pointer; ivlen: csize): gcry_error_t {.
+proc gcry_cipher_setiv*(hd: gcry_cipher_hd_t; iv: pointer; ivlen: uint): gcry_error_t {.
     importc: "gcry_cipher_setiv", import_gcrypt.}
 ##  Provide additional authentication data for AEAD modes/ciphers.
 
-proc gcry_cipher_authenticate*(hd: gcry_cipher_hd_t; abuf: pointer; abuflen: csize): gcry_error_t {.
+proc gcry_cipher_authenticate*(hd: gcry_cipher_hd_t; abuf: pointer; abuflen: uint): gcry_error_t {.
     importc: "gcry_cipher_authenticate", import_gcrypt.}
 ##  Get authentication tag for AEAD modes/ciphers.
 
-proc gcry_cipher_gettag*(hd: gcry_cipher_hd_t; outtag: pointer; taglen: csize): gcry_error_t {.
+proc gcry_cipher_gettag*(hd: gcry_cipher_hd_t; outtag: pointer; taglen: uint): gcry_error_t {.
     importc: "gcry_cipher_gettag", import_gcrypt.}
 ##  Check authentication tag for AEAD modes/ciphers.
 
-proc gcry_cipher_checktag*(hd: gcry_cipher_hd_t; intag: pointer; taglen: csize): gcry_error_t {.
+proc gcry_cipher_checktag*(hd: gcry_cipher_hd_t; intag: pointer; taglen: uint): gcry_error_t {.
     importc: "gcry_cipher_checktag", import_gcrypt.}
 ##  Reset the handle to the state after open.
 
@@ -1208,15 +1208,15 @@ template gcry_cipher_cts*(h, on: untyped): untyped =
 ##  Set counter for CTR mode.  (CTR,CTRLEN) must denote a buffer of
 ##    block size length, or (NULL,0) to set the CTR to the all-zero block.
 
-proc gcry_cipher_setctr*(hd: gcry_cipher_hd_t; ctr: pointer; ctrlen: csize): gpg_error_t {.
+proc gcry_cipher_setctr*(hd: gcry_cipher_hd_t; ctr: pointer; ctrlen: uint): gpg_error_t {.
     importc: "gcry_cipher_setctr", import_gcrypt.}
 ##  Retrieve the key length in bytes used with algorithm A.
 
-proc gcry_cipher_get_algo_keylen*(algo: cint): csize {.
+proc gcry_cipher_get_algo_keylen*(algo: cint): uint {.
     importc: "gcry_cipher_get_algo_keylen", import_gcrypt.}
 ##  Retrieve the block length in bytes used with algorithm A.
 
-proc gcry_cipher_get_algo_blklen*(algo: cint): csize {.
+proc gcry_cipher_get_algo_blklen*(algo: cint): uint {.
     importc: "gcry_cipher_get_algo_blklen", import_gcrypt.}
 ##  Return 0 if the algorithm A is available for use.
 
@@ -1290,11 +1290,11 @@ proc gcry_pk_genkey*(r_key: ptr gcry_sexp_t; s_parms: gcry_sexp_t): gcry_error_t
     importc: "gcry_pk_genkey", import_gcrypt.}
 ##  Catch all function for miscellaneous operations.
 
-proc gcry_pk_ctl*(cmd: cint; buffer: pointer; buflen: csize): gcry_error_t {.
+proc gcry_pk_ctl*(cmd: cint; buffer: pointer; buflen: uint): gcry_error_t {.
     importc: "gcry_pk_ctl", import_gcrypt.}
 ##  Retrieve information about the public key algorithm ALGO.
 
-proc gcry_pk_algo_info*(algo: cint; what: cint; buffer: pointer; nbytes: ptr csize): gcry_error_t {.
+proc gcry_pk_algo_info*(algo: cint; what: cint; buffer: pointer; nbytes: ptr uint): gcry_error_t {.
     importc: "gcry_pk_algo_info", import_gcrypt.}
 ##  Map the public key algorithm whose ID is contained in ALGORITHM to
 ##    a string representation of the algorithm name.  For unknown
@@ -1423,13 +1423,13 @@ proc gcry_md_copy*(bhd: ptr gcry_md_hd_t; ahd: gcry_md_hd_t): gcry_error_t {.
 proc gcry_md_reset*(hd: gcry_md_hd_t) {.importc: "gcry_md_reset", import_gcrypt.}
 ##  Perform various operations on the digest object HD.
 
-proc gcry_md_ctl*(hd: gcry_md_hd_t; cmd: cint; buffer: pointer; buflen: csize): gcry_error_t {.
+proc gcry_md_ctl*(hd: gcry_md_hd_t; cmd: cint; buffer: pointer; buflen: uint): gcry_error_t {.
     importc: "gcry_md_ctl", import_gcrypt.}
 ##  Pass LENGTH bytes of data in BUFFER to the digest object HD so that
 ##    it can update the digest values.  This is the actual hash
 ##    function.
 
-proc gcry_md_write*(hd: gcry_md_hd_t; buffer: pointer; length: csize) {.
+proc gcry_md_write*(hd: gcry_md_hd_t; buffer: pointer; length: uint) {.
     importc: "gcry_md_write", import_gcrypt.}
 ##  Read out the final digest from HD return the digest value for
 ##    algorithm ALGO.
@@ -1439,7 +1439,7 @@ proc gcry_md_read*(hd: gcry_md_hd_t; algo: cint): ptr cuchar {.importc: "gcry_md
 ##  Read more output from algorithm ALGO to BUFFER of size LENGTH from
 ##  digest object HD. Algorithm needs to be 'expendable-output function'.
 
-proc gcry_md_extract*(hd: gcry_md_hd_t; algo: cint; buffer: pointer; length: csize): gpg_error_t {.
+proc gcry_md_extract*(hd: gcry_md_hd_t; algo: cint; buffer: pointer; length: uint): gpg_error_t {.
     importc: "gcry_md_extract", import_gcrypt.}
 ##  Convenience function to calculate the hash from the data in BUFFER
 ##    of size LENGTH using the algorithm ALGO avoiding the creation of a
@@ -1447,7 +1447,7 @@ proc gcry_md_extract*(hd: gcry_md_hd_t; algo: cint; buffer: pointer; length: csi
 ##    DIGEST which must be large enough to hold the digest of the given
 ##    algorithm.
 
-proc gcry_md_hash_buffer*(algo: gcry_md_algos; digest: pointer; buffer: pointer; length: csize) {.
+proc gcry_md_hash_buffer*(algo: gcry_md_algos; digest: pointer; buffer: pointer; length: uint) {.
     importc: "gcry_md_hash_buffer", import_gcrypt.}
 
 
@@ -1478,7 +1478,7 @@ proc gcry_md_is_secure*(a: gcry_md_hd_t): cint {.importc: "gcry_md_is_secure",
 ##  gcry_error_t gcry_md_info (gcry_md_hd_t h, int what, void *buffer, size_t *nbytes) GCRY_ATTR_INTERNAL;
 ##  Retrieve various information about the algorithm ALGO.
 
-proc gcry_md_algo_info*(algo: cint; what: cint; buffer: pointer; nbytes: ptr csize): gcry_error_t {.
+proc gcry_md_algo_info*(algo: cint; what: cint; buffer: pointer; nbytes: ptr uint): gcry_error_t {.
     importc: "gcry_md_algo_info", import_gcrypt.}
 ##  Map the digest algorithm id ALGO to a string representation of the
 ##    algorithm name.  For unknown algorithms this function returns
@@ -1493,7 +1493,7 @@ proc gcry_md_map_name*(name: cstring): cint {.importc: "gcry_md_map_name", impor
 ##  For use with the HMAC feature, the set MAC key to the KEY of
 ##    KEYLEN bytes.
 
-proc gcry_md_setkey*(hd: gcry_md_hd_t; key: pointer; keylen: csize): gcry_error_t {.
+proc gcry_md_setkey*(hd: gcry_md_hd_t; key: pointer; keylen: uint): gcry_error_t {.
     importc: "gcry_md_setkey", import_gcrypt.}
 ##  Start or stop debugging for digest handle HD; i.e. create a file
 ##    named dbgmd-<n>.<suffix> while hashing.  If SUFFIX is NULL,
@@ -1535,8 +1535,8 @@ template gcry_md_get_asnoid*(a, b, n: untyped): untyped =
 proc gcry_easyhash*(input: string, algo: gcry_md_algos): string =
   ## Convenience function to hash a string.
   let digest_length = gcry_md_get_algo_dlen(algo)
-  var digest = gcry_malloc(digest_length.csize)
-  gcry_md_hash_buffer(algo, digest, input.cstring, input.len.csize)
+  var digest = gcry_malloc(digest_length.uint)
+  gcry_md_hash_buffer(algo, digest, input.cstring, input.len.uint)
   return fromCString(digest, digest_length.int)
 
 
@@ -1595,32 +1595,32 @@ proc gcry_mac_open*(handle: ptr gcry_mac_hd_t; algo: cint; flags: cuint; ctx: gc
 proc gcry_mac_close*(h: gcry_mac_hd_t) {.importc: "gcry_mac_close", import_gcrypt.}
 ##  Perform various operations on the MAC object H.
 
-proc gcry_mac_ctl*(h: gcry_mac_hd_t; cmd: cint; buffer: pointer; buflen: csize): gcry_error_t {.
+proc gcry_mac_ctl*(h: gcry_mac_hd_t; cmd: cint; buffer: pointer; buflen: uint): gcry_error_t {.
     importc: "gcry_mac_ctl", import_gcrypt.}
 ##  Retrieve various information about the MAC algorithm ALGO.
 
-proc gcry_mac_algo_info*(algo: cint; what: cint; buffer: pointer; nbytes: ptr csize): gcry_error_t {.
+proc gcry_mac_algo_info*(algo: cint; what: cint; buffer: pointer; nbytes: ptr uint): gcry_error_t {.
     importc: "gcry_mac_algo_info", import_gcrypt.}
 ##  Set KEY of length KEYLEN bytes for the MAC handle HD.
 
-proc gcry_mac_setkey*(hd: gcry_mac_hd_t; key: pointer; keylen: csize): gcry_error_t {.
+proc gcry_mac_setkey*(hd: gcry_mac_hd_t; key: pointer; keylen: uint): gcry_error_t {.
     importc: "gcry_mac_setkey", import_gcrypt.}
 ##  Set initialization vector IV of length IVLEN for the MAC handle HD.
 
-proc gcry_mac_setiv*(hd: gcry_mac_hd_t; iv: pointer; ivlen: csize): gcry_error_t {.
+proc gcry_mac_setiv*(hd: gcry_mac_hd_t; iv: pointer; ivlen: uint): gcry_error_t {.
     importc: "gcry_mac_setiv", import_gcrypt.}
 ##  Pass LENGTH bytes of data in BUFFER to the MAC object HD so that
 ##    it can update the MAC values.
 
-proc gcry_mac_write*(hd: gcry_mac_hd_t; buffer: pointer; length: csize): gcry_error_t {.
+proc gcry_mac_write*(hd: gcry_mac_hd_t; buffer: pointer; length: uint): gcry_error_t {.
     importc: "gcry_mac_write", import_gcrypt.}
 ##  Read out the final authentication code from the MAC object HD to BUFFER.
 
-proc gcry_mac_read*(hd: gcry_mac_hd_t; buffer: pointer; buflen: ptr csize): gcry_error_t {.
+proc gcry_mac_read*(hd: gcry_mac_hd_t; buffer: pointer; buflen: ptr uint): gcry_error_t {.
     importc: "gcry_mac_read", import_gcrypt.}
 ##  Verify the final authentication code from the MAC object HD with BUFFER.
 
-proc gcry_mac_verify*(hd: gcry_mac_hd_t; buffer: pointer; buflen: csize): gcry_error_t {.
+proc gcry_mac_verify*(hd: gcry_mac_hd_t; buffer: pointer; buflen: uint): gcry_error_t {.
     importc: "gcry_mac_verify", import_gcrypt.}
 ##  Retrieve the algorithm used with MAC.
 
@@ -1671,9 +1671,9 @@ type
 
 ##  Derive a key from a passphrase.
 
-proc gcry_kdf_derive*(passphrase: pointer; passphraselen: csize; algo: cint;
-                     subalgo: cint; salt: pointer; saltlen: csize; iterations: culong;
-                     keysize: csize; keybuffer: pointer): gpg_error_t {.
+proc gcry_kdf_derive*(passphrase: pointer; passphraselen: uint; algo: cint;
+                     subalgo: cint; salt: pointer; saltlen: uint; iterations: culong;
+                     keysize: uint; keybuffer: pointer): gpg_error_t {.
     importc: "gcry_kdf_derive", import_gcrypt.}
 ## ***********************************
 ##                                   *
@@ -1702,13 +1702,13 @@ type
 ##  Fill BUFFER with LENGTH bytes of random, using random numbers of
 ##    quality LEVEL.
 
-proc gcry_randomize*(buffer: pointer; length: csize; level: gcry_random_level_t) {.
+proc gcry_randomize*(buffer: pointer; length: uint; level: gcry_random_level_t) {.
     importc: "gcry_randomize", import_gcrypt.}
 ##  Add the external random from BUFFER with LENGTH bytes into the
 ##    pool. QUALITY should either be -1 for unknown or in the range of 0
 ##    to 100
 
-proc gcry_random_add_bytes*(buffer: pointer; length: csize; quality: cint): gcry_error_t {.
+proc gcry_random_add_bytes*(buffer: pointer; length: uint; quality: cint): gcry_error_t {.
     importc: "gcry_random_add_bytes", import_gcrypt.}
 ##  If random numbers are used in an application, this macro should be
 ##    called from time to time so that new stuff gets added to the
@@ -1720,13 +1720,13 @@ template gcry_fast_random_poll*(): untyped =
 ##  Return NBYTES of allocated random using a random numbers of quality
 ##    LEVEL.
 
-proc gcry_random_bytes*(nbytes: csize; level: gcry_random_level_t): pointer {.
+proc gcry_random_bytes*(nbytes: uint; level: gcry_random_level_t): pointer {.
     importc: "gcry_random_bytes", import_gcrypt.}
 ##  Return NBYTES of allocated random using a random numbers of quality
 ##    LEVEL.  The random numbers are created returned in "secure"
 ##    memory.
 
-proc gcry_random_bytes_secure*(nbytes: csize; level: gcry_random_level_t): pointer {.
+proc gcry_random_bytes_secure*(nbytes: uint; level: gcry_random_level_t): pointer {.
     importc: "gcry_random_bytes_secure", import_gcrypt.}
 ##  Set the big integer W to a random value of NBITS using a random
 ##    generator with quality LEVEL.  Note that by using a level of
@@ -1736,7 +1736,7 @@ proc gcry_mpi_randomize*(w: gcry_mpi_t; nbits: cuint; level: gcry_random_level_t
     importc: "gcry_mpi_randomize", import_gcrypt.}
 ##  Create an unpredicable nonce of LENGTH bytes in BUFFER.
 
-proc gcry_create_nonce*(buffer: pointer; length: csize) {.
+proc gcry_create_nonce*(buffer: pointer; length: uint) {.
     importc: "gcry_create_nonce", import_gcrypt.}
 ## *****************************
 ##
@@ -1807,7 +1807,7 @@ proc gcry_ctx_release*(ctx: gcry_ctx_t) {.importc: "gcry_ctx_release", import_gc
 ##  Log data using Libgcrypt's own log interface.
 
 proc gcry_log_debug*(fmt: cstring) {.varargs, importc: "gcry_log_debug", import_gcrypt.}
-proc gcry_log_debughex*(text: cstring; buffer: pointer; length: csize) {.
+proc gcry_log_debughex*(text: cstring; buffer: pointer; length: uint) {.
     importc: "gcry_log_debughex", import_gcrypt.}
 proc gcry_log_debugmpi*(text: cstring; mpi: gcry_mpi_t) {.
     importc: "gcry_log_debugmpi", import_gcrypt.}
@@ -1834,7 +1834,7 @@ type
 ##  Type for memory allocation handlers.
 
 type
-  gcry_handler_alloc_t* = proc (n: csize): pointer
+  gcry_handler_alloc_t* = proc (n: uint): pointer
 
 ##  Type for secure memory check handlers.
 
@@ -1844,7 +1844,7 @@ type
 ##  Type for memory reallocation handlers.
 
 type
-  gcry_handler_realloc_t* = proc (p: pointer; n: csize): pointer
+  gcry_handler_realloc_t* = proc (p: pointer; n: uint): pointer
 
 ##  Type for memory free handlers.
 
@@ -1854,7 +1854,7 @@ type
 ##  Type for out-of-memory handlers.
 
 type
-  gcry_handler_no_mem_t* = proc (a1: pointer; a2: csize; a3: cuint): cint
+  gcry_handler_no_mem_t* = proc (a1: pointer; a2: uint; a3: cuint): cint
 
 ##  Type for fatal error handlers.
 
@@ -1901,20 +1901,20 @@ proc gcry_set_gettext_handler*(f: proc (a1: cstring): cstring) {.
 ##  Libgcrypt uses its own memory allocation.  It is important to use
 ##    gcry_free () to release memory allocated by libgcrypt.
 
-proc gcry_calloc*(n: csize; m: csize): pointer {.importc: "gcry_calloc", import_gcrypt.}
-proc gcry_malloc_secure*(n: csize): pointer {.importc: "gcry_malloc_secure",
+proc gcry_calloc*(n: uint; m: uint): pointer {.importc: "gcry_calloc", import_gcrypt.}
+proc gcry_malloc_secure*(n: uint): pointer {.importc: "gcry_malloc_secure",
     import_gcrypt.}
-proc gcry_calloc_secure*(n: csize; m: csize): pointer {.importc: "gcry_calloc_secure",
+proc gcry_calloc_secure*(n: uint; m: uint): pointer {.importc: "gcry_calloc_secure",
     import_gcrypt.}
-proc gcry_realloc*(a: pointer; n: csize): pointer {.importc: "gcry_realloc", import_gcrypt.}
+proc gcry_realloc*(a: pointer; n: uint): pointer {.importc: "gcry_realloc", import_gcrypt.}
 proc gcry_strdup*(string: cstring): cstring {.importc: "gcry_strdup", import_gcrypt.}
-proc gcry_xmalloc*(n: csize): pointer {.importc: "gcry_xmalloc", import_gcrypt.}
-proc gcry_xcalloc*(n: csize; m: csize): pointer {.importc: "gcry_xcalloc", import_gcrypt.}
-proc gcry_xmalloc_secure*(n: csize): pointer {.importc: "gcry_xmalloc_secure",
+proc gcry_xmalloc*(n: uint): pointer {.importc: "gcry_xmalloc", import_gcrypt.}
+proc gcry_xcalloc*(n: uint; m: uint): pointer {.importc: "gcry_xcalloc", import_gcrypt.}
+proc gcry_xmalloc_secure*(n: uint): pointer {.importc: "gcry_xmalloc_secure",
     import_gcrypt.}
-proc gcry_xcalloc_secure*(n: csize; m: csize): pointer {.
+proc gcry_xcalloc_secure*(n: uint; m: uint): pointer {.
     importc: "gcry_xcalloc_secure", import_gcrypt.}
-proc gcry_xrealloc*(a: pointer; n: csize): pointer {.importc: "gcry_xrealloc",
+proc gcry_xrealloc*(a: pointer; n: uint): pointer {.importc: "gcry_xrealloc",
     import_gcrypt.}
 proc gcry_xstrdup*(a: cstring): cstring {.importc: "gcry_xstrdup", import_gcrypt.}
 proc gcry_free*(a: pointer) {.importc: "gcry_free", import_gcrypt.}

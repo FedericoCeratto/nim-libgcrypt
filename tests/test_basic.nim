@@ -69,8 +69,8 @@ suite "basic":
     const input = "fooo"
     const expected = "A9823A788388027D9A7A8C19F49E786B"
     let digest_length = gcry_md_get_algo_dlen(GCRY_MD_MD5)
-    var digest = gcry_malloc(digest_length.csize)
-    gcry_md_hash_buffer(GCRY_MD_MD5, digest, input.cstring, input.len.csize)
+    var digest = gcry_malloc(digest_length.uint)
+    gcry_md_hash_buffer(GCRY_MD_MD5, digest, input.cstring, input.len.uint)
     let d = fromCString(digest, digest_length.int).toHex()
     check d == expected
 
